@@ -5,19 +5,21 @@ class App extends React.Component {
       breakLength: 5,
       sessionLength: 25,
       timer: 1500,
-      isStart: false
+      isStart: false,
+      type: 'Session'
     }
 
     this._changeBreakLength   = this._changeBreakLength.bind(this)
     this._changeSessionLength = this._changeSessionLength.bind(this)
     this._startStop           = this._startStop.bind(this)
+    this._reset               = this._reset.bind(this)
     this.decreaseTimer        = this.decreaseTimer.bind(this)
   }
   
   _changeBreakLength(i) {
     if (this.state.isStart) return
     let breakLength = this.state.breakLength + i;
-    if (breakLength < 1 || breakLength > 10) return
+    if (breakLength < 1 || breakLength > 60) return
 
     this.setState({
       ...this.state,
@@ -27,7 +29,7 @@ class App extends React.Component {
   _changeSessionLength(i) {
     if (this.state.isStart) return
     let sessionLength = this.state.sessionLength + i;
-    if (sessionLength < 1 || sessionLength > 30) return
+    if (sessionLength < 1 || sessionLength > 60) return
 
     this.setState({
       ...this.state,
@@ -53,9 +55,26 @@ class App extends React.Component {
     })
   }
   decreaseTimer() {
+    if (this.state.timer <= 0) {
+      this.setState({
+        ...this.state,
+        type: 'Break',
+        timer: this.state.breakLength * 60,
+      })
+    }
     this.setState({
       ...this.state,
       timer: this.state.timer - 1
+    })
+  }
+  _reset() {
+    if (this.loop) this.loop.cancel()
+    this.setState({
+      breakLength: 5,
+      sessionLength: 25,
+      timer: 1500,
+      isStart: false,
+      type: 'Session'
     })
   }
   render() {
@@ -63,7 +82,8 @@ class App extends React.Component {
       <div className="body">
         <div className="title">Pomodoro Clock</div>
         <div className="main">
-          <Clock 
+          <Clock
+            type={this.state.type} 
             timer={this.state.timer}
           />
           <Adjustment
@@ -75,6 +95,7 @@ class App extends React.Component {
           <StartStop 
             isStart={this.state.isStart}
             startStop={this._startStop}
+            reset={this._reset}
           />
         </div>
       </div>
@@ -95,7 +116,8 @@ class Clock extends React.Component {
         <div className="circle-1">
           <div className="circle-2">
             <div className="circle-3">
-              {this.convertTime(this.props.timer)}
+              <span id="timer-label">{this.props.type}</span>
+              <span id="time-left">{this.convertTime(this.props.timer)}</span>
             </div>
           </div>
         </div>
@@ -114,7 +136,7 @@ const Adjustment = (props) => {
           <span id="break-decrement" onClick={() => props.changeBreakLength(-1)}>
             <i class="fas fa-arrow-left"></i>
           </span>
-          <span style={{fontSize: "30px"}}>
+          <span id="break-length" style={{fontSize: "30px"}}>
             {props.breakLength}
           </span>
           <span id="break-increment" onClick={() => props.changeBreakLength(1)}>
@@ -130,7 +152,7 @@ const Adjustment = (props) => {
           <span id="session-decrement" onClick={() => props.changeSessionLength(-1)}>
             <i class="fas fa-arrow-left"></i>
           </span>
-          <span style={{fontSize: "30px"}}>
+          <span id="session-length" style={{fontSize: "30px"}}>
             {props.sessionLength}
           </span>
           <span id="session-increment" onClick={() => props.changeSessionLength(1)}>
@@ -145,12 +167,12 @@ class StartStop extends React.Component {
   render() {
     return (
       <div className="bottom">
-        <div className="box-item" onClick={this.props.startStop}>
+        <div className="box-item" onClick={this.props.startStop} id="start_stop">
           {this.props.isStart ?
             <i class="fas fa-pause"></i> :
             <i class="fas fa-play"></i>}
         </div>
-        <div className="box-item">
+        <div className="box-item" onClick={this.props.reset} id="reset">
           <i class="fas fa-undo-alt"></i>
         </div>
       </div>
