@@ -4,12 +4,14 @@ class App extends React.Component {
     this.state = {
       breakLength: 5,
       sessionLength: 25,
+      timer: 1500,
       isStart: false
     }
 
     this._changeBreakLength   = this._changeBreakLength.bind(this)
     this._changeSessionLength = this._changeSessionLength.bind(this)
     this._startStop           = this._startStop.bind(this)
+    this.decreaseTimer        = this.decreaseTimer.bind(this)
   }
   
   _changeBreakLength(i) {
@@ -29,22 +31,41 @@ class App extends React.Component {
 
     this.setState({
       ...this.state,
-      sessionLength
+      sessionLength,
+      timer: sessionLength * 60,
     })
   }
   _startStop() {
+    // Start
+    if (!this.state.isStart) {
+      this.loop = accurateInterval(() => {
+        this.decreaseTimer()
+      }, 1000)
+    } 
+    // Pause
+    else {
+      this.loop.cancel()
+    }
+    
     this.setState({
       ...this.state,
       isStart: !this.state.isStart
     })
   }
-
+  decreaseTimer() {
+    this.setState({
+      ...this.state,
+      timer: this.state.timer - 1
+    })
+  }
   render() {
     return (
       <div className="body">
         <div className="title">Pomodoro Clock</div>
         <div className="main">
-          <Clock />
+          <Clock 
+            timer={this.state.timer}
+          />
           <Adjustment
             breakLength={this.state.breakLength} 
             sessionLength={this.state.sessionLength} 
@@ -61,13 +82,20 @@ class App extends React.Component {
   }
 }
 class Clock extends React.Component {
+  convertTime(time) {
+    let minutes = Math.floor(time / 60);
+    let seconds = time - minutes * 60;
+    seconds = seconds < 10 ? '0' + seconds : seconds;
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    return minutes + ':' + seconds;
+  }
   render() {
     return (
       <div className="clock">
         <div className="circle-1">
           <div className="circle-2">
             <div className="circle-3">
-              25:00
+              {this.convertTime(this.props.timer)}
             </div>
           </div>
         </div>
