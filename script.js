@@ -56,16 +56,27 @@ class App extends React.Component {
   }
   decreaseTimer() {
     if (this.state.timer <= 0) {
+      if (this.state.type == 'Break') {
+        this.setState({
+          ...this.state,
+          type: 'Session',
+          timer: this.state.sessionLength * 60,
+        })
+      } else {
+        this.setState({
+          ...this.state,
+          type: 'Break',
+          timer: this.state.breakLength * 60,
+        })
+      }
+
+      this.audioBeep.play();
+    } else {
       this.setState({
         ...this.state,
-        type: 'Break',
-        timer: this.state.breakLength * 60,
+        timer: this.state.timer - 1
       })
     }
-    this.setState({
-      ...this.state,
-      timer: this.state.timer - 1
-    })
   }
   _reset() {
     if (this.loop) this.loop.cancel()
@@ -76,6 +87,9 @@ class App extends React.Component {
       isStart: false,
       type: 'Session'
     })
+
+    this.audioBeep.pause();
+    this.audioBeep.currentTime = 0;
   }
   render() {
     return (
@@ -96,6 +110,10 @@ class App extends React.Component {
             isStart={this.state.isStart}
             startStop={this._startStop}
             reset={this._reset}
+          />
+          <audio id="beep" preload="auto" 
+            src="https://goo.gl/65cBl1"
+            ref={(audio) => { this.audioBeep = audio; }} 
           />
         </div>
       </div>
